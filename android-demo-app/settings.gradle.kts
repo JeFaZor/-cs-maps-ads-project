@@ -21,4 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "CounterStrikeMaps"
 include(":app")
- 
+include(":adssdk")
