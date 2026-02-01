@@ -1,30 +1,21 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
+from pymongo import MongoClient
+from bson import ObjectId
 import os
-import sys
+import random
+from datetime import datetime
 
-# Add src to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
-
-from database import get_db
-from routes.ads import ads_bp
-from routes.analytics import analytics_bp
-
-# Initialize Flask app
+# Initialize Flask
 app = Flask(__name__)
 CORS(app)
 
-# Test MongoDB connection
-try:
-    db = get_db()
-    db.command('ping')
-    print("✅ Connected to MongoDB!")
-except Exception as e:
-    print(f"❌ MongoDB error: {e}")
-
-# Register blueprints
-app.register_blueprint(ads_bp, url_prefix='/api/ads')
-app.register_blueprint(analytics_bp, url_prefix='/api/analytics')
+# MongoDB connection
+MONGODB_URI = os.getenv('MONGODB_URI')
+client = MongoClient(MONGODB_URI)
+db = client['csads']
+ads_collection = db['ads']
+analytics_collection = db['analytics']
 
 # Health check
 @app.route('/')
@@ -35,3 +26,98 @@ def home():
         'message': 'CS Maps Ads API is running with MongoDB',
         'version': '1.0.1'
     })
+
+# Get all ads
+@app.route('/api/ads', methods=['GET'])
+def get_all_ads():
+    ads = list(ads_collection.find({'active': True}))
+    for ad in ads:
+        ad['ad_id'] = str(ad['_id'])
+        ad['_id'] = str(ad['_id'])
+    return jsonify({'status': 'success', 'count': len(ads), 'data': ads}), 200
+
+# Get random ad
+@app.route('/api/ads/random', methods=['GET'])
+def get_random_ad():
+    ads = list(ads_collection.find({'active': True}))
+    if not ads:
+        return jsonify({'status': 'error', 'message': 'No ads available'}), 404
+    ad = random.choice(ads)
+    ad['ad_id'] = str(ad['_id'])
+    ad['_id'] = str(ad['_id'])
+    return jsonify({'status': 'success', 'data': ad}), 200
+
+# Create ad
+@app.route('/api/ads', methods=['POST'])
+def create_ad():
+    data = request.get_json()
+    required = ['title', 'description', 'image_url', 'link_url']
+    for field in required:
+        if field not in data:
+            return jsonify({'status': 'error', 'message': f'Missing: {field}'}), 400
+    
+    ad = {
+        'title': data['title'],
+        'description': data['description'],
+        'image_url': data['image_url'],
+        'link_url': data['link_url'],
+        'location': data.get('location'),
+        'active': data.get('active', True),
+        'created_at': datetime.utcnow(),
+        'impressions': 0,
+        'clicks': 0
+    }
+    result = ads_collection.insert_one(ad)
+    ad['ad_id'] = str(result.inserted_id)
+    ad['_id'] = str(result.inserted_id)
+    return jsonify({'status': 'success', 'message': 'Ad created', 'data': ad}), 201
+
+# Track impression
+@app.route('/api/analytics/impression', methods=['POST'])
+def track_impression():
+    data = request.get_json()
+    if 'ad_id' not in data:
+        return jsonify({'status': 'error', 'message': 'Missing ad_id'}), 400
+    
+    analytics_collection.insert_one({
+        'type': 'impression',
+        'ad_id': data['ad_id'],
+        'timestamp': datetime.utcnow(),
+        'user_location': data.get('location')
+    })
+    
+    try:
+        ads_collection.update_one({'_id': ObjectId(data['ad_id'])}, {'$inc': {'impressions': 1}})
+    except:
+        pass
+    
+    return jsonify({'status': 'success', 'message': 'Impression tracked'}), 201
+
+# Track click
+@app.route('/api/analytics/click', methods=['POST'])
+def track_click():
+    data = request.get_json()
+    if 'ad_id' not in data:
+        return jsonify({'status': 'error', 'message': 'Missing ad_id'}), 400
+    
+    analytics_collection.insert_one({
+        'type': 'click',
+        'ad_id': data['ad_id'],
+        'timestamp': datetime.utcnow(),
+        'user_location': data.get('location')
+    })
+    
+    try:
+        ads_collection.update_one({'_id': ObjectId(data['ad_id'])}, {'$inc': {'clicks': 1}})
+    except:
+        pass
+    
+    return jsonify({'status': 'success', 'message': 'Click tracked'}), 201
+
+# Stats
+@app.route('/api/analytics/stats', methods=['GET'])
+def get_stats():
+    impressions = analytics_collection.count_documents({'type': 'impression'})
+    clicks = analytics_collection.count_documents({'type': 'click'})
+    ctr = round((clicks / impressions * 100), 2) if impressions > 0 else 0
+    return jsonify({'status': 'success', 'data': {'total_impressions': impressions, 'total_clicks': clicks, 'ctr': ctr}}), 200
