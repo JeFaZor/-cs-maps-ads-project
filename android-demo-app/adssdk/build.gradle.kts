@@ -1,6 +1,9 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    id("maven-publish")  // for jitpack
+
+
 }
 
 android {
@@ -50,4 +53,16 @@ dependencies {
 
 // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+}
+afterEvaluate {
+    publishing {
+        publications {
+            create<MavenPublication>("release") {
+                from(components["release"])
+                groupId = "com.github.JeFaZor"
+                artifactId = "cs-maps-ads-sdk"
+                version = "1.0.0"
+            }
+        }
+    }
 }
