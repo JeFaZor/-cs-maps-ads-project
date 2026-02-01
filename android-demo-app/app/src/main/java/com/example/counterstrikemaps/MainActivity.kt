@@ -6,7 +6,8 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -25,6 +26,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.foundation.background
+
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -77,6 +82,11 @@ fun MapsScreen() {
                 maps = maps,
                 onMapClick = { index -> selectedMapIndex = index }
             )
+
+            // Ad View at bottom
+            Spacer(modifier = Modifier.height(16.dp))
+
+
         }
     }
 }
@@ -84,13 +94,30 @@ fun MapsScreen() {
 // List of maps using LazyColumn
 @Composable
 fun MapsList(maps: List<Map>, onMapClick: (Int) -> Unit) {
-    LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        items(maps.size) { index ->
+    LazyColumn {
+        itemsIndexed(maps) { index, map ->
             MapCard(
-                map = maps[index],
+                map = map,
                 onClick = { onMapClick(index) }
+            )
+        }
+
+        // Ad at the bottom
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
+
+            AndroidView(
+                factory = { context ->
+                    com.example.adssdk.AdView(context).apply {
+                        val adManager = com.example.adssdk.AdManager("http://192.168.1.188:5000/")
+                        initialize(adManager)
+                        loadAd()
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(300.dp)
+                    .background(Color.Red)
             )
         }
     }
