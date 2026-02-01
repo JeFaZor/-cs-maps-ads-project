@@ -2,5 +2,4 @@ jdk:
   - openjdk17
 subdir: android-demo-app
 install:
-  - ./gradlew :adssdk:publishToMavenLocal
-
+  - gradle :adssdk:publishToMavenLocal
