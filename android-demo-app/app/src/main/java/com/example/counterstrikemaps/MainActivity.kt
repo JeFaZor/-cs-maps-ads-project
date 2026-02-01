@@ -333,6 +333,25 @@ fun MapDetailScreen(
             }
         }
 
+        // Ad View
+        Spacer(modifier = Modifier.height(10.dp))
+
+        AndroidView(
+            factory = { context ->
+                com.example.adssdk.AdView(context).apply {
+                    val adManager = com.example.adssdk.AdManager("http://192.168.1.188:5000/")
+                    initialize(adManager)
+                    loadAd()
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(150.dp)
+                .padding(horizontal = 16.dp)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         // Back button
         Button(
             onClick = onBack,
