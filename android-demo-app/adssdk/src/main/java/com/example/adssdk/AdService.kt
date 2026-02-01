@@ -17,7 +17,7 @@ data class AdsResponse(
 )
 
 data class AnalyticsRequest(
-    val ad_id: Int,
+    val ad_id: String,
     val location: String? = null
 )
 

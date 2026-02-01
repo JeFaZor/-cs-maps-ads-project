@@ -1,11 +1,14 @@
 from flask import Blueprint, jsonify, request
 from datetime import datetime
+from database import get_analytics_collection, get_ads_collection
+from bson import ObjectId
 
 # Create blueprint
 analytics_bp = Blueprint('analytics', __name__)
 
-# Temporary in-memory storage for analytics
-analytics_storage = []
+# Get MongoDB collections
+analytics_collection = get_analytics_collection()
+ads_collection = get_ads_collection()
 
 @analytics_bp.route('/impression', methods=['POST'])
 def track_impression():
@@ -22,11 +25,20 @@ def track_impression():
     event = {
         'type': 'impression',
         'ad_id': data['ad_id'],
-        'timestamp': datetime.utcnow().isoformat(),
+        'timestamp': datetime.utcnow(),
         'user_location': data.get('location')
     }
     
-    analytics_storage.append(event)
+    analytics_collection.insert_one(event)
+    
+    # Update ad impressions count
+    try:
+        ads_collection.update_one(
+            {'_id': ObjectId(data['ad_id'])},
+            {'$inc': {'impressions': 1}}
+        )
+    except:
+        pass
     
     return jsonify({
         'status': 'success',
@@ -48,11 +60,20 @@ def track_click():
     event = {
         'type': 'click',
         'ad_id': data['ad_id'],
-        'timestamp': datetime.utcnow().isoformat(),
+        'timestamp': datetime.utcnow(),
         'user_location': data.get('location')
     }
     
-    analytics_storage.append(event)
+    analytics_collection.insert_one(event)
+    
+    # Update ad clicks count
+    try:
+        ads_collection.update_one(
+            {'_id': ObjectId(data['ad_id'])},
+            {'$inc': {'clicks': 1}}
+        )
+    except:
+        pass
     
     return jsonify({
         'status': 'success',
@@ -62,8 +83,8 @@ def track_click():
 @analytics_bp.route('/stats', methods=['GET'])
 def get_stats():
     """Get analytics statistics"""
-    total_impressions = len([e for e in analytics_storage if e['type'] == 'impression'])
-    total_clicks = len([e for e in analytics_storage if e['type'] == 'click'])
+    total_impressions = analytics_collection.count_documents({'type': 'impression'})
+    total_clicks = analytics_collection.count_documents({'type': 'click'})
     
     return jsonify({
         'status': 'success',

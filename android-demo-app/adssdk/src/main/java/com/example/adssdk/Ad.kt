@@ -1,7 +1,7 @@
 package com.example.adssdk
 
 data class Ad(
-    val ad_id: Int,
+    val ad_id: String,
     val title: String,
     val description: String,
     val image_url: String,

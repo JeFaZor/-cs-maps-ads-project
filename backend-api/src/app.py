@@ -2,13 +2,22 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
 import os
+from database import get_db
 
 # Load environment variables
 load_dotenv()
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app)  # Enable CORS for Android app
+CORS(app)
+
+# Test MongoDB connection
+try:
+    db = get_db()
+    db.command('ping')
+    print("✅ Connected to MongoDB successfully!")
+except Exception as e:
+    print(f"❌ MongoDB connection failed: {e}")
 
 # Import routes
 from routes.ads import ads_bp
@@ -23,8 +32,8 @@ app.register_blueprint(analytics_bp, url_prefix='/api/analytics')
 def home():
     return jsonify({
         'status': 'success',
-        'message': 'CS Maps Ads API is running',
-        'version': '1.0.0'
+        'message': 'CS Maps Ads API is running with MongoDB',
+        'version': '1.0.1'
     })
 
 # Run the app

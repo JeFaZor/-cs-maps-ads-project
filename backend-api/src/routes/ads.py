@@ -1,38 +1,49 @@
 from flask import Blueprint, jsonify, request
 from models.ad import Ad
+from database import get_ads_collection
+from bson import ObjectId
 import random
 
 # Create blueprint
 ads_bp = Blueprint('ads', __name__)
 
-# Temporary in-memory storage (until we connect MongoDB)
-ads_storage = []
+# Get MongoDB collection
+ads_collection = get_ads_collection()
 
 @ads_bp.route('', methods=['GET'])
 def get_all_ads():
     """Get all active ads"""
-    active_ads = [ad.to_dict() for ad in ads_storage if ad.active]
+    ads = list(ads_collection.find({'active': True}))
+    
+    # Convert ObjectId to string
+    for ad in ads:
+        ad['ad_id'] = str(ad['_id'])
+        ad['_id'] = str(ad['_id'])
+    
     return jsonify({
         'status': 'success',
-        'count': len(active_ads),
-        'data': active_ads
+        'count': len(ads),
+        'data': ads
     }), 200
 
 @ads_bp.route('/random', methods=['GET'])
 def get_random_ad():
     """Get a random active ad"""
-    active_ads = [ad for ad in ads_storage if ad.active]
+    ads = list(ads_collection.find({'active': True}))
     
-    if not active_ads:
+    if not ads:
         return jsonify({
             'status': 'error',
             'message': 'No ads available'
         }), 404
     
-    random_ad = random.choice(active_ads)
+    random_ad = random.choice(ads)
+    random_ad['ad_id'] = str(random_ad['_id'])
+    random_ad['_id'] = str(random_ad['_id'])
+    
     return jsonify({
         'status': 'success',
-        'data': random_ad.to_dict()
+        'data': random_ad
     }), 200
 
 @ads_bp.route('', methods=['POST'])
@@ -51,19 +62,28 @@ def create_ad():
     
     # Create ad
     ad = Ad.from_dict(data)
-    ad.ad_id = len(ads_storage) + 1  # Simple ID generation
-    ads_storage.append(ad)
+    result = ads_collection.insert_one(ad.to_dict())
+    
+    ad_dict = ad.to_dict()
+    ad_dict['ad_id'] = str(result.inserted_id)
+    ad_dict['_id'] = str(result.inserted_id)
     
     return jsonify({
         'status': 'success',
         'message': 'Ad created successfully',
-        'data': ad.to_dict()
+        'data': ad_dict
     }), 201
 
-@ads_bp.route('/<int:ad_id>', methods=['GET'])
+@ads_bp.route('/<ad_id>', methods=['GET'])
 def get_ad_by_id(ad_id):
     """Get specific ad by ID"""
-    ad = next((ad for ad in ads_storage if ad.ad_id == ad_id), None)
+    try:
+        ad = ads_collection.find_one({'_id': ObjectId(ad_id)})
+    except:
+        return jsonify({
+            'status': 'error',
+            'message': 'Invalid ad ID'
+        }), 400
     
     if not ad:
         return jsonify({
@@ -71,7 +91,10 @@ def get_ad_by_id(ad_id):
             'message': 'Ad not found'
         }), 404
     
+    ad['ad_id'] = str(ad['_id'])
+    ad['_id'] = str(ad['_id'])
+    
     return jsonify({
         'status': 'success',
-        'data': ad.to_dict()
+        'data': ad
     }), 200

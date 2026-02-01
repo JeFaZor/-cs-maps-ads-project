@@ -33,7 +33,7 @@ class AdManager(private val baseUrl: String) {
     }
 
     // Track impression
-    fun trackImpression(adId: Int) {
+    fun trackImpression(adId: String) {
         val request = AnalyticsRequest(ad_id = adId)
         adService.trackImpression(request).enqueue(object : Callback<Void> {
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
@@ -47,7 +47,7 @@ class AdManager(private val baseUrl: String) {
     }
 
     // Track click
-    fun trackClick(adId: Int) {
+    fun trackClick(adId: String) {
         val request = AnalyticsRequest(ad_id = adId)
         adService.trackClick(request).enqueue(object : Callback<Void> {
             override fun onResponse(call: Call<Void>, response: Response<Void>) {

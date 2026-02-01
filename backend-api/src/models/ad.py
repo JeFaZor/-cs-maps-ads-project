@@ -1,25 +1,27 @@
 from datetime import datetime
+from bson import ObjectId
 
 class Ad:
     """Ad model for MongoDB"""
     
     def __init__(self, title, description, image_url, link_url, 
-                 location=None, active=True, ad_id=None):
-        self.ad_id = ad_id
+                 location=None, active=True, _id=None):
+        self._id = _id if _id else ObjectId()
         self.title = title
         self.description = description
         self.image_url = image_url
         self.link_url = link_url
-        self.location = location  # Geographic targeting (optional)
+        self.location = location
         self.active = active
         self.created_at = datetime.utcnow()
         self.impressions = 0
         self.clicks = 0
     
     def to_dict(self):
-        """Convert ad to dictionary"""
+        """Convert ad to dictionary for MongoDB"""
         return {
-            'ad_id': self.ad_id,
+            '_id': self._id,
+            'ad_id': str(self._id),
             'title': self.title,
             'description': self.description,
             'image_url': self.image_url,
@@ -41,5 +43,5 @@ class Ad:
             link_url=data.get('link_url'),
             location=data.get('location'),
             active=data.get('active', True),
-            ad_id=data.get('ad_id')
+            _id=data.get('_id')
         )
