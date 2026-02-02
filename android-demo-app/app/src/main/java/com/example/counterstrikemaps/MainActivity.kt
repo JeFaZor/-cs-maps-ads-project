@@ -109,7 +109,7 @@ fun MapsList(maps: List<Map>, onMapClick: (Int) -> Unit) {
             AndroidView(
                 factory = { context ->
                     com.example.adssdk.AdView(context).apply {
-                        val adManager = com.example.adssdk.AdManager("http://192.168.1.188:5000/")
+                        val adManager = com.example.adssdk.AdManager("https://cs-maps-ads-project.vercel.app/")
                         initialize(adManager)
                         loadAd()
                     }
@@ -339,7 +339,7 @@ fun MapDetailScreen(
         AndroidView(
             factory = { context ->
                 com.example.adssdk.AdView(context).apply {
-                    val adManager = com.example.adssdk.AdManager("http://192.168.1.188:5000/")
+                    val adManager = com.example.adssdk.AdManager("https://cs-maps-ads-project.vercel.app/")
                     initialize(adManager)
                     loadAd()
                 }
