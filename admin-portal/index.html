@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS Maps Ads - Admin Portal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>🎮 CS Maps Ads</h1>
+            <p>Administration Portal</p>
+        </header>
+
+        <!-- Navigation -->
+        <nav>
+            <button class="nav-btn active" data-tab="dashboard">Dashboard</button>
+            <button class="nav-btn" data-tab="ads">Manage Ads</button>
+            <button class="nav-btn" data-tab="create">Create Ad</button>
+        </nav>
+
+        <!-- Dashboard Tab -->
+        <section id="dashboard" class="tab-content active">
+            <h2>📊 Statistics Dashboard</h2>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">👁️</div>
+                    <div class="stat-info">
+                        <h3 id="totalImpressions">-</h3>
+                        <p>Total Impressions</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">🖱️</div>
+                    <div class="stat-info">
+                        <h3 id="totalClicks">-</h3>
+                        <p>Total Clicks</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-info">
+                        <h3 id="ctr">-</h3>
+                        <p>Click-Through Rate</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">📢</div>
+                    <div class="stat-info">
+                        <h3 id="totalAds">-</h3>
+                        <p>Active Ads</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="refresh-section">
+                <button class="btn btn-secondary" onclick="loadStats()">🔄 Refresh Stats</button>
+            </div>
+        </section>
+
+        <!-- Manage Ads Tab -->
+        <section id="ads" class="tab-content">
+            <h2>📢 Manage Advertisements</h2>
+            
+            <div class="ads-controls">
+                <button class="btn btn-secondary" onclick="loadAds()">🔄 Refresh List</button>
+            </div>
+
+            <div id="adsTableContainer">
+                <table id="adsTable">
+                    <thead>
+                        <tr>
+                            <th>Image</th>
+                            <th>Title</th>
+                            <th>Description</th>
+                            <th>Link</th>
+                            <th>Impressions</th>
+                            <th>Clicks</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adsTableBody">
+                        <tr>
+                            <td colspan="8" class="loading">Loading ads...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Create Ad Tab -->
+        <section id="create" class="tab-content">
+            <h2>➕ Create New Advertisement</h2>
+            
+            <form id="createAdForm" class="ad-form">
+                <div class="form-group">
+                    <label for="title">Ad Title *</label>
+                    <input type="text" id="title" name="title" required 
+                           placeholder="Enter ad title" maxlength="100">
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description *</label>
+                    <textarea id="description" name="description" required 
+                              placeholder="Enter ad description" rows="3" maxlength="200"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="imageUrl">Image URL *</label>
+                    <input type="url" id="imageUrl" name="imageUrl" required 
+                           placeholder="https://example.com/image.jpg">
+                    <small>Recommended size: 400x300px</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="linkUrl">Link URL *</label>
+                    <input type="url" id="linkUrl" name="linkUrl" required 
+                           placeholder="https://example.com/landing-page">
+                </div>
+
+                <div class="form-group">
+                    <label for="location">Location Targeting (Optional)</label>
+                    <input type="text" id="location" name="location" 
+                           placeholder="e.g., US, UK, Global">
+                </div>
+
+                <div class="form-group checkbox-group">
+                    <label>
+                        <input type="checkbox" id="active" name="active" checked>
+                        Active (Ad will be shown immediately)
+                    </label>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        ✅ Create Advertisement
+                    </button>
+                    <button type="reset" class="btn btn-secondary">
+                        🔄 Reset Form
+                    </button>
+                </div>
+
+                <div id="formMessage" class="form-message"></div>
+            </form>
+        </section>
+
+        <!-- Footer -->
+        <footer>
+            <p>CS Maps Ads Admin Portal v1.0 | 
+               API: <a href="https://cs-maps-ads-project.vercel.app" target="_blank">
+                   cs-maps-ads-project.vercel.app
+               </a>
+            </p>
+        </footer>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>✏️ Edit Advertisement</h2>
+                <span class="close" onclick="closeEditModal()">&times;</span>
+            </div>
+            
+            <form id="editAdForm" class="ad-form">
+                <input type="hidden" id="editAdId">
+                
+                <div class="form-group">
+                    <label for="editTitle">Ad Title *</label>
+                    <input type="text" id="editTitle" name="title" required 
+                           placeholder="Enter ad title" maxlength="100">
+                </div>
+
+                <div class="form-group">
+                    <label for="editDescription">Description *</label>
+                    <textarea id="editDescription" name="description" required 
+                              placeholder="Enter ad description" rows="3" maxlength="200"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="editImageUrl">Image URL *</label>
+                    <input type="url" id="editImageUrl" name="imageUrl" required 
+                           placeholder="https://example.com/image.jpg">
+                </div>
+
+                <div class="form-group">
+                    <label for="editLinkUrl">Link URL *</label>
+                    <input type="url" id="editLinkUrl" name="linkUrl" required 
+                           placeholder="https://example.com/landing-page">
+                </div>
+
+                <div class="form-group">
+                    <label for="editLocation">Location Targeting (Optional)</label>
+                    <input type="text" id="editLocation" name="location" 
+                           placeholder="e.g., US, UK, Global">
+                </div>
+
+                <div class="form-group checkbox-group">
+                    <label>
+                        <input type="checkbox" id="editActive" name="active">
+                        Active
+                    </label>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        💾 Save Changes
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">
+                        ❌ Cancel
+                    </button>
+                </div>
+
+                <div id="editFormMessage" class="form-message"></div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

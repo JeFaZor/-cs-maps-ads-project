@@ -47,6 +47,19 @@ def get_random_ad():
     ad['_id'] = str(ad['_id'])
     return jsonify({'status': 'success', 'data': ad}), 200
 
+# Get specific ad by ID
+@app.route('/api/ads/<ad_id>', methods=['GET'])
+def get_ad_by_id(ad_id):
+    try:
+        ad = ads_collection.find_one({'_id': ObjectId(ad_id)})
+        if not ad:
+            return jsonify({'status': 'error', 'message': 'Ad not found'}), 404
+        ad['ad_id'] = str(ad['_id'])
+        ad['_id'] = str(ad['_id'])
+        return jsonify({'status': 'success', 'data': ad}), 200
+    except:
+        return jsonify({'status': 'error', 'message': 'Invalid ad ID'}), 400
+
 # Create ad
 @app.route('/api/ads', methods=['POST'])
 def create_ad():
@@ -71,6 +84,63 @@ def create_ad():
     ad['ad_id'] = str(result.inserted_id)
     ad['_id'] = str(result.inserted_id)
     return jsonify({'status': 'success', 'message': 'Ad created', 'data': ad}), 201
+
+# Update ad
+@app.route('/api/ads/<ad_id>', methods=['PUT'])
+def update_ad(ad_id):
+    try:
+        data = request.get_json()
+        
+        # Build update object
+        update_data = {}
+        if 'title' in data:
+            update_data['title'] = data['title']
+        if 'description' in data:
+            update_data['description'] = data['description']
+        if 'image_url' in data:
+            update_data['image_url'] = data['image_url']
+        if 'link_url' in data:
+            update_data['link_url'] = data['link_url']
+        if 'location' in data:
+            update_data['location'] = data['location']
+        if 'active' in data:
+            update_data['active'] = data['active']
+        
+        if not update_data:
+            return jsonify({'status': 'error', 'message': 'No fields to update'}), 400
+        
+        # Update in database
+        result = ads_collection.update_one(
+            {'_id': ObjectId(ad_id)},
+            {'$set': update_data}
+        )
+        
+        if result.matched_count == 0:
+            return jsonify({'status': 'error', 'message': 'Ad not found'}), 404
+        
+        # Get updated ad
+        ad = ads_collection.find_one({'_id': ObjectId(ad_id)})
+        ad['ad_id'] = str(ad['_id'])
+        ad['_id'] = str(ad['_id'])
+        
+        return jsonify({'status': 'success', 'message': 'Ad updated', 'data': ad}), 200
+    
+    except:
+        return jsonify({'status': 'error', 'message': 'Invalid ad ID'}), 400
+
+# Delete ad
+@app.route('/api/ads/<ad_id>', methods=['DELETE'])
+def delete_ad(ad_id):
+    try:
+        result = ads_collection.delete_one({'_id': ObjectId(ad_id)})
+        
+        if result.deleted_count == 0:
+            return jsonify({'status': 'error', 'message': 'Ad not found'}), 404
+        
+        return jsonify({'status': 'success', 'message': 'Ad deleted'}), 200
+    
+    except:
+        return jsonify({'status': 'error', 'message': 'Invalid ad ID'}), 400
 
 # Track impression
 @app.route('/api/analytics/impression', methods=['POST'])
