@@ -7,7 +7,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -18,7 +17,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.counterstrikemaps.ui.theme.CounterStrikeMapsTheme
-
 import androidx.compose.foundation.Image
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -27,9 +25,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.foundation.background
-
-
+import androidx.activity.compose.BackHandler
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,27 +62,27 @@ fun MapsScreen() {
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFF1a1a1a))
-                .padding(16.dp)
         ) {
-            // Title
-            Text(
-                text = "CS Maps Explorer",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+            // Title - Fixed header
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = Color(0xFF1a1a1a),
+                shadowElevation = 4.dp
+            ) {
+                Text(
+                    text = "CS Maps Explorer",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
 
-            // Maps list
+            // Maps list with proper spacing
             MapsList(
                 maps = maps,
                 onMapClick = { index -> selectedMapIndex = index }
             )
-
-            // Ad View at bottom
-            Spacer(modifier = Modifier.height(16.dp))
-
-
         }
     }
 }
@@ -94,7 +90,10 @@ fun MapsScreen() {
 // List of maps using LazyColumn
 @Composable
 fun MapsList(maps: List<Map>, onMapClick: (Int) -> Unit) {
-    LazyColumn {
+    LazyColumn(
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
         itemsIndexed(maps) { index, map ->
             MapCard(
                 map = map,
@@ -102,80 +101,116 @@ fun MapsList(maps: List<Map>, onMapClick: (Int) -> Unit) {
             )
         }
 
-        // Ad at the bottom
+        // Ad at the bottom with proper spacing
         item {
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
-            AndroidView(
-                factory = { context ->
-                    com.example.adssdk.AdView(context).apply {
-                        val adManager = com.example.adssdk.AdManager("https://cs-maps-ads-project.vercel.app/")
-                        initialize(adManager)
-                        loadAd()
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(300.dp)
-                    .background(Color.Red)
-            )
+            // Ad Card wrapper
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFF2d2d2d)
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                ) {
+                    // "Sponsored" label
+                    Text(
+                        text = "Sponsored",
+                        fontSize = 10.sp,
+                        color = Color(0xFFaaaaaa),
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+
+                    // Ad View
+                    AndroidView(
+                        factory = { context ->
+                            com.example.adssdk.AdView(context).apply {
+                                val adManager = com.example.adssdk.AdManager("https://cs-maps-ads-project.vercel.app/")
+                                initialize(adManager)
+                                loadAd()
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(240.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
 
-// Single map card
+// Single map card with improved styling
 @Composable
 fun MapCard(map: Map, onClick: () -> Unit) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(120.dp),
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color(0xFF2d2d2d)
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        onClick = onClick  // Add click handler
+        onClick = onClick
     ) {
-        Column(
+        Row(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Map name
-            Text(
-                text = map.name,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-
-            // Map description
-            Text(
-                text = map.description,
-                fontSize = 14.sp,
-                color = Color(0xFFaaaaaa)
-            )
-
-            // Map type badge
-            Surface(
-                shape = RoundedCornerShape(6.dp),
-                color = Color(0xFFff6b35),
-                modifier = Modifier.width(100.dp)
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                // Map name
                 Text(
-                    text = map.type,
-                    fontSize = 12.sp,
-                    color = Color.White,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    text = map.name,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
                 )
+
+                // Map description
+                Text(
+                    text = map.description,
+                    fontSize = 13.sp,
+                    color = Color(0xFFaaaaaa)
+                )
+
+                // Map type badge
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = Color(0xFFff6b35)
+                ) {
+                    Text(
+                        text = map.type,
+                        fontSize = 11.sp,
+                        color = Color.White,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                    )
+                }
             }
+
+            // Arrow indicator
+            Text(
+                text = "›",
+                fontSize = 40.sp,
+                color = Color(0xFFaaaaaa),
+                modifier = Modifier.padding(start = 8.dp)
+            )
         }
     }
 }
 
-// Hardcoded sample data
 // Hardcoded sample data with images
 fun getSampleMaps(): List<Map> {
     return listOf(
@@ -231,7 +266,7 @@ fun getSampleMaps(): List<Map> {
     )
 }
 
-// Map detail screen with navigation arrows
+// Map detail screen with improved layout
 @Composable
 fun MapDetailScreen(
     maps: List<Map>,
@@ -241,128 +276,194 @@ fun MapDetailScreen(
     var currentIndex by remember { mutableStateOf(initialMapIndex) }
     val currentMap = maps[currentIndex]
 
+    // Handle back button press
+    BackHandler {
+        onBack()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF1a1a1a))
     ) {
         // Top bar with navigation
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        Surface(
+            color = Color(0xFF1a1a1a),
+            shadowElevation = 4.dp
         ) {
-            // Left arrow
-            IconButton(
-                onClick = {
-                    if (currentIndex > 0) {
-                        currentIndex--
-                    }
-                },
-                enabled = currentIndex > 0
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "←",
-                    fontSize = 32.sp,
-                    color = if (currentIndex > 0) Color.White else Color.Gray
-                )
-            }
+                // Left arrow
+                IconButton(
+                    onClick = {
+                        if (currentIndex > 0) {
+                            currentIndex--
+                        }
+                    },
+                    enabled = currentIndex > 0
+                ) {
+                    Text(
+                        text = "←",
+                        fontSize = 32.sp,
+                        color = if (currentIndex > 0) Color.White else Color.Gray
+                    )
+                }
 
-            // Map name
-            Text(
-                text = currentMap.name,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-
-            // Right arrow
-            IconButton(
-                onClick = {
-                    if (currentIndex < maps.size - 1) {
-                        currentIndex++
-                    }
-                },
-                enabled = currentIndex < maps.size - 1
-            ) {
+                // Map name
                 Text(
-                    text = "→",
-                    fontSize = 32.sp,
-                    color = if (currentIndex < maps.size - 1) Color.White else Color.Gray
+                    text = currentMap.name,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
                 )
+
+                // Right arrow
+                IconButton(
+                    onClick = {
+                        if (currentIndex < maps.size - 1) {
+                            currentIndex++
+                        }
+                    },
+                    enabled = currentIndex < maps.size - 1
+                ) {
+                    Text(
+                        text = "→",
+                        fontSize = 32.sp,
+                        color = if (currentIndex < maps.size - 1) Color.White else Color.Gray
+                    )
+                }
             }
         }
 
-        // Map image
-        Image(
-            painter = painterResource(id = currentMap.imageRes),
-            contentDescription = currentMap.name,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(400.dp)
-                .padding(16.dp),
-            contentScale = ContentScale.Fit
-        )
-
-        // Map details
+        // Content - no scroll, but normal sizes
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
+                .weight(1f)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Text(
-                text = currentMap.description,
-                fontSize = 16.sp,
-                color = Color(0xFFaaaaaa),
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-
-            Surface(
-                shape = RoundedCornerShape(6.dp),
-                color = Color(0xFFff6b35),
-                modifier = Modifier.width(120.dp)
+            // Map image - normal size
+            Card(
+                shape = RoundedCornerShape(12.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
-                Text(
-                    text = currentMap.type,
-                    fontSize = 14.sp,
-                    color = Color.White,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                Image(
+                    painter = painterResource(id = currentMap.imageRes),
+                    contentDescription = currentMap.name,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(280.dp),
+                    contentScale = ContentScale.Fit
                 )
+            }
+
+            // Map details card - normal layout
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFF2d2d2d)
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text = "About",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+
+                    Text(
+                        text = currentMap.description,
+                        fontSize = 13.sp,
+                        color = Color(0xFFaaaaaa)
+                    )
+
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = Color(0xFFff6b35)
+                    ) {
+                        Text(
+                            text = currentMap.type,
+                            fontSize = 12.sp,
+                            color = Color.White,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                        )
+                    }
+                }
+            }
+
+            // Ad View - slightly smaller only
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFF2d2d2d)
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                ) {
+                    Text(
+                        text = "Sponsored",
+                        fontSize = 10.sp,
+                        color = Color(0xFFaaaaaa),
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+
+                    AndroidView(
+                        factory = { context ->
+                            com.example.adssdk.AdView(context).apply {
+                                val adManager = com.example.adssdk.AdManager("https://cs-maps-ads-project.vercel.app/")
+                                initialize(adManager)
+                                loadAd()
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                    )
+                }
             }
         }
 
-        // Ad View
-        Spacer(modifier = Modifier.height(10.dp))
-
-        AndroidView(
-            factory = { context ->
-                com.example.adssdk.AdView(context).apply {
-                    val adManager = com.example.adssdk.AdManager("https://cs-maps-ads-project.vercel.app/")
-                    initialize(adManager)
-                    loadAd()
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(150.dp)
-                .padding(horizontal = 16.dp)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Back button
-        Button(
-            onClick = onBack,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF2d2d2d)
-            )
+        // Back button - Fixed at bottom
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            color = Color(0xFF1a1a1a),
+            shadowElevation = 8.dp
         ) {
-            Text(text = "Back to List", color = Color.White)
+            Button(
+                onClick = onBack,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFff6b35)
+                ),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(
+                    text = "← Back to List",
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(vertical = 4.dp)
+                )
+            }
         }
     }
 }

@@ -11,6 +11,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 
 class AdView @JvmOverloads constructor(
     context: Context,
@@ -30,37 +31,42 @@ class AdView @JvmOverloads constructor(
         // Create container
         containerLayout = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(16, 16, 16, 16)
-            setBackgroundColor(0xFF2d2d2d.toInt())
+            setPadding(0, 0, 0, 0)
+            setBackgroundColor(0x00000000) // Transparent
         }
 
-        // Create image view
+        // Create image view with proper height
         adImageView = ImageView(context).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                400
+                dpToPx(150) // Normal height
             ).apply {
-                setMargins(0, 0, 0, 16)
+                setMargins(0, 0, 0, 12)
             }
             scaleType = ImageView.ScaleType.CENTER_CROP
+            adjustViewBounds = true
         }
 
         // Create title
         adTitleText = TextView(context).apply {
-            textSize = 18f
+            textSize = 15f
             setTextColor(0xFFFFFFFF.toInt())
+            gravity = Gravity.START
+            maxLines = 2
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                setMargins(0, 0, 0, 8)
+                setMargins(0, 0, 0, 5)
             }
         }
 
         // Create description
         adDescriptionText = TextView(context).apply {
-            textSize = 14f
+            textSize = 13f
             setTextColor(0xFFAAAAAA.toInt())
+            gravity = Gravity.START
+            maxLines = 2
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -105,16 +111,18 @@ class AdView @JvmOverloads constructor(
         }
     }
 
-    // Display ad
+    // Display ad with improved image loading
     private fun displayAd(ad: Ad) {
         adTitleText.text = ad.title
         adDescriptionText.text = ad.description
 
-        // Load image with Glide
+        // Load image with Glide - improved settings
         Glide.with(context)
             .load(ad.image_url)
             .placeholder(android.R.color.darker_gray)
             .error(android.R.color.holo_red_dark)
+            .transition(DrawableTransitionOptions.withCrossFade())
+            .fitCenter() // Fit entire image in view
             .into(adImageView)
     }
 
@@ -133,5 +141,11 @@ class AdView @JvmOverloads constructor(
         adTitleText.text = "Ad Error"
         adDescriptionText.text = message
         adImageView.setImageResource(android.R.color.darker_gray)
+    }
+
+    // Convert dp to pixels
+    private fun dpToPx(dp: Int): Int {
+        val density = context.resources.displayMetrics.density
+        return (dp * density).toInt()
     }
 }
