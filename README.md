@@ -438,15 +438,15 @@ git push origin v1.0.5
 ## 📸 Screenshots
 
 ### Demo Application
-- CS Maps list with ad placement
-- Map detail screen with ad
-- Ad loading and display
+![App_Photo (1)](https://github.com/user-attachments/assets/87ca6e0b-b384-4190-94b6-011debaa1d16)
+![App_Photo (2)](https://github.com/user-attachments/assets/c9141a1f-40a1-41b1-87ef-697708eee9f8)
 
-### Backend Dashboard
-- Vercel deployment status
-- MongoDB Atlas cluster
 
-*(Add actual screenshots to docs/ folder)*
+### Backend Dashboard (admin portal)
+<img width="1358" height="867" alt="Admin_Portal (1)" src="https://github.com/user-attachments/assets/e67362f8-ac20-4131-8595-f4cc67defb5d" />
+<img width="1638" height="856" alt="Admin_Portal (3)" src="https://github.com/user-attachments/assets/70c13388-0c90-4d50-a809-46ded94a4d29" />
+<img width="1638" height="853" alt="Admin_Portal (2)" src="https://github.com/user-attachments/assets/b08a748a-d8d2-46d0-b811-f29a0d911b77" />
+
 
 ---
 
